@@ -6,6 +6,7 @@ const { signToken } = require('../utils/auth');
 const resolvers = {
   Query: {
     me: async (parent, args, context) => {
+      console.log(context.user);
       if (context.user) {
         console.log(context.user);
         const userData = await User.findOne({ _id: context.user._id })
@@ -19,6 +20,7 @@ const resolvers = {
     },
 
     books: async (parent, { query }) => {
+      console.log('Books query called with query: ', query);
       const params = query ? query : {};
       const response = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=${params}`
@@ -72,13 +74,33 @@ const resolvers = {
       try {
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
-          { $addToSet: { savedBooks: body } },
+          { $addToSet: { savedBooks: args } },
           { new: true, runValidators: true }
         );
-        return res.json(updatedUser);
+
+        return updatedUser;
       } catch (err) {
         console.log(err);
-        return res.status(400).json(err);
+        throw new Error('User not updated');
+      }
+    },
+
+    deleteBook: async (parent, args, context) => {
+      try {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId: args.bookId } } },
+          { new: true }
+        );
+
+        if (!updatedUser) {
+          throw new Error('User not updated');
+        }
+
+        return updatedUser;
+      } catch (err) {
+        console.log(err);
+        throw new Error('User not updated');
       }
     },
   },
