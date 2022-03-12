@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import {
   Jumbotron,
   Container,
@@ -12,7 +12,7 @@ import {
 
 import Auth from '../utils/auth';
 import { saveBook } from '../utils/API';
-import { QUERY_BOOKS } from '../utils/queries';
+import { QUERY_BOOKS, QUERY_ME } from '../utils/queries';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
@@ -24,25 +24,46 @@ const SearchBooks = () => {
   // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
 
-  const { data } = useQuery(QUERY_BOOKS);
+  const [getBooks, { data }] = useLazyQuery(QUERY_BOOKS);
+
+  //const { loading, data } = useQuery(QUERY_ME);
 
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
+    if (data) {
+      const { books } = data;
+      console.log(books);
+      setSearchedBooks(books);
+    }
     return () => saveBookIds(savedBookIds);
-  });
+  }, [saveBookIds, data]);
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
+    console.log(searchInput);
+
+    getBooks({
+      variables: { query: searchInput },
+    });
+
+    // const { data } = await getBooks({ query: 'King' });
+
+    // console.log(data);
+
     if (!searchInput) {
       return false;
     }
 
-    console.log(searchInput);
+    // console.log(searchInput);
 
-    console.log(data);
+    // const data = getBooks({
+    //   variables: { query: searchInput },
+    // });
+
+    // console.log(data);
 
     // try {
     //   const response = await searchGoogleBooks(searchInput);
@@ -123,14 +144,14 @@ const SearchBooks = () => {
 
       <Container>
         <h2>
-          {searchedBooks.length
-            ? `Viewing ${searchedBooks.length} results:`
+          {searchedBooks?.length
+            ? `Viewing ${searchedBooks?.length} results:`
             : 'Search for a book to begin'}
         </h2>
         <CardColumns>
           {searchedBooks.map((book) => {
             return (
-              <Card key={book.bookId} border='dark'>
+              <Card key={book.id} border='dark'>
                 {book.image ? (
                   <Card.Img
                     src={book.image}
@@ -140,7 +161,12 @@ const SearchBooks = () => {
                 ) : null}
                 <Card.Body>
                   <Card.Title>{book.title}</Card.Title>
-                  <p className='small'>Authors: {book.authors}</p>
+                  <p className='small'>
+                    Authors:{' '}
+                    {book.authors.map((author) => (
+                      <span key={author.author}>{author.author}, </span>
+                    ))}
+                  </p>
                   <Card.Text>{book.description}</Card.Text>
                   {Auth.loggedIn() && (
                     <Button
