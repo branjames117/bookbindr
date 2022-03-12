@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client';
 import {
   Jumbotron,
   Container,
@@ -33,7 +33,6 @@ const SearchBooks = () => {
   useEffect(() => {
     if (data) {
       const { books } = data;
-      console.log(books);
       setSearchedBooks(books);
     }
     return () => saveBookIds(savedBookIds);
@@ -43,50 +42,13 @@ const SearchBooks = () => {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    console.log(searchInput);
-
-    getBooks({
-      variables: { query: searchInput },
-    });
-
-    // const { data } = await getBooks({ query: 'King' });
-
-    // console.log(data);
-
     if (!searchInput) {
       return false;
     }
 
-    // console.log(searchInput);
-
-    // const data = getBooks({
-    //   variables: { query: searchInput },
-    // });
-
-    // console.log(data);
-
-    // try {
-    //   const response = await searchGoogleBooks(searchInput);
-
-    //   if (!response.ok) {
-    //     throw new Error('something went wrong!');
-    //   }
-
-    //   const { items } = await response.json();
-
-    //   const bookData = items.map((book) => ({
-    //     bookId: book.id,
-    //     authors: book.volumeInfo.authors || ['No author to display'],
-    //     title: book.volumeInfo.title,
-    //     description: book.volumeInfo.description,
-    //     image: book.volumeInfo.imageLinks?.thumbnail || '',
-    //   }));
-
-    //   setSearchedBooks(bookData);
-    //   setSearchInput('');
-    // } catch (err) {
-    //   console.error(err);
-    // }
+    getBooks({
+      variables: { query: searchInput },
+    });
   };
 
   // create function to handle saving a book to our database
@@ -144,8 +106,8 @@ const SearchBooks = () => {
 
       <Container>
         <h2>
-          {searchedBooks?.length
-            ? `Viewing ${searchedBooks?.length} results:`
+          {searchedBooks.length
+            ? `Viewing ${searchedBooks.length} results:`
             : 'Search for a book to begin'}
         </h2>
         <CardColumns>
