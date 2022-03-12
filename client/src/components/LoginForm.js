@@ -36,6 +36,8 @@ const LoginForm = () => {
         },
       });
 
+      console.log(mutationResponse);
+
       const token = mutationResponse.data.login.token;
 
       Auth.login(token);
@@ -45,7 +47,6 @@ const LoginForm = () => {
     }
 
     setUserFormData({
-      username: '',
       email: '',
       password: '',
     });
