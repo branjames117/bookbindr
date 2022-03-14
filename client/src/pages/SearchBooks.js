@@ -33,11 +33,10 @@ const SearchBooks = () => {
   useEffect(() => {
     if (data) {
       const { books } = data;
-      console.log('books ', books);
       setSearchedBooks(books);
     }
     return () => saveBookIds(savedBookIds);
-  }, [saveBookIds, data]);
+  }, [savedBookIds, saveBookIds, data]);
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
@@ -47,9 +46,13 @@ const SearchBooks = () => {
       return false;
     }
 
-    await getBooks({
-      variables: { query: searchInput },
-    });
+    try {
+      await getBooks({
+        variables: { query: searchInput },
+      });
+    } catch (e) {
+      console.error(e);
+    }
 
     setSearchInput('');
   };

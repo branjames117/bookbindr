@@ -18,7 +18,6 @@ const resolvers = {
     },
 
     books: async (parent, { query }) => {
-      console.log('Books query called with query: ', query);
       const params = query ? query : {};
       const response = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=${params}`
@@ -50,7 +49,6 @@ const resolvers = {
     },
 
     login: async (parent, { email, password }) => {
-      console.log(email);
       const user = await User.findOne({ email });
 
       if (!user) {
@@ -69,8 +67,6 @@ const resolvers = {
     },
 
     saveBook: async (parent, { bookInput }, context) => {
-      console.log('Attempting book save');
-      console.log(bookInput);
       try {
         const user = await User.findOneAndUpdate(
           { _id: context.user._id },
@@ -80,13 +76,11 @@ const resolvers = {
 
         return user;
       } catch (err) {
-        console.log(err);
         throw new Error('User not updated');
       }
     },
 
     removeBook: async (parent, { bookId }, context) => {
-      console.log('attempting to remove book with ID: ', bookId);
       try {
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
@@ -100,7 +94,6 @@ const resolvers = {
 
         return updatedUser;
       } catch (err) {
-        console.log(err);
         throw new Error('User not updated');
       }
     },
