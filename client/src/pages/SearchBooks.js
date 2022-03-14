@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLazyQuery } from '@apollo/client';
+import { useMutation, useLazyQuery } from '@apollo/client';
 import {
   Jumbotron,
   Container,
@@ -11,8 +11,8 @@ import {
 } from 'react-bootstrap';
 
 import Auth from '../utils/auth';
-import { saveBook } from '../utils/API';
-import { QUERY_BOOKS, QUERY_ME } from '../utils/queries';
+import { QUERY_BOOKS } from '../utils/queries';
+import { SAVE_BOOK } from '../utils/mutations';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
@@ -26,13 +26,14 @@ const SearchBooks = () => {
 
   const [getBooks, { data }] = useLazyQuery(QUERY_BOOKS);
 
-  //const { loading, data } = useQuery(QUERY_ME);
+  const [saveBook] = useMutation(SAVE_BOOK);
 
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
     if (data) {
       const { books } = data;
+      console.log('books ', books);
       setSearchedBooks(books);
     }
     return () => saveBookIds(savedBookIds);
@@ -46,34 +47,39 @@ const SearchBooks = () => {
       return false;
     }
 
-    getBooks({
+    await getBooks({
       variables: { query: searchInput },
     });
+
+    setSearchInput('');
   };
 
   // create function to handle saving a book to our database
   const handleSaveBook = async (bookId) => {
-    // find the book in `searchedBooks` state by the matching id
-    const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
-
-    // get token
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
-
-    if (!token) {
-      return false;
-    }
-
     try {
-      const response = await saveBook(bookToSave, token);
+      // find the book in `searchedBooks` state by the matching id
+      const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+      // get token
+      const token = Auth.loggedIn() ? Auth.getToken() : null;
+
+      if (!token) {
+        return false;
       }
+
+      // separate out the typename property from bookToSave
+      const { __typename, ...BookInput } = bookToSave;
+
+      await saveBook({
+        variables: {
+          bookInput: BookInput,
+        },
+      });
 
       // if book successfully saves to user's account, save book id to state
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error('Error: ', e);
     }
   };
 
@@ -113,7 +119,7 @@ const SearchBooks = () => {
         <CardColumns>
           {searchedBooks.map((book) => {
             return (
-              <Card key={book.id} border='dark'>
+              <Card key={book.bookId} border='dark'>
                 {book.image ? (
                   <Card.Img
                     src={book.image}
@@ -122,13 +128,10 @@ const SearchBooks = () => {
                   />
                 ) : null}
                 <Card.Body>
-                  <Card.Title>{book.title}</Card.Title>
-                  <p className='small'>
-                    Authors:{' '}
-                    {book.authors.map((author) => (
-                      <span key={author.author}>{author.author}, </span>
-                    ))}
-                  </p>
+                  <Card.Title>
+                    <a href={book.link}>{book.title}</a>
+                  </Card.Title>
+                  <p className='small'>Authors: {book.authors.join(', ')}</p>
                   <Card.Text>{book.description}</Card.Text>
                   {Auth.loggedIn() && (
                     <Button

@@ -6,11 +6,10 @@ const { signToken } = require('../utils/auth');
 const resolvers = {
   Query: {
     me: async (parent, args, context) => {
-      console.log('querying me');
       if (context.user) {
-        const userData = await User.findOne({ _id: context.user._id })
-          .select('-__v -password')
-          .populate('savedBooks');
+        const userData = await User.findOne({ _id: context.user._id }).select(
+          '-__v -password'
+        );
 
         return userData;
       }
@@ -27,15 +26,14 @@ const resolvers = {
       const { items } = await response.json();
       const books = items.map((book) => {
         return {
-          id: book.id,
+          bookId: book.id,
           title: book.volumeInfo.title,
           authors: book.volumeInfo.authors
-            ? book.volumeInfo.authors.map((author) => {
-                return { author };
-              })
+            ? book.volumeInfo.authors
             : ['No authors to display'],
           description: book.volumeInfo.description,
           image: book.volumeInfo.imageLinks?.thumbnail || '',
+          link: book.volumeInfo.infoLink,
         };
       });
 
@@ -70,15 +68,17 @@ const resolvers = {
       return { token, user };
     },
 
-    saveBook: async (parent, args, context) => {
+    saveBook: async (parent, { bookInput }, context) => {
+      console.log('Attempting book save');
+      console.log(bookInput);
       try {
-        const updatedUser = await User.findOneAndUpdate(
+        const user = await User.findOneAndUpdate(
           { _id: context.user._id },
-          { $addToSet: { savedBooks: args } },
+          { $addToSet: { savedBooks: bookInput } },
           { new: true, runValidators: true }
         );
 
-        return updatedUser;
+        return user;
       } catch (err) {
         console.log(err);
         throw new Error('User not updated');
