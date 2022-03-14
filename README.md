@@ -21,7 +21,7 @@ Clone this repository with `git clone <url>`, then in the root directory run `np
 
 To start both the front-end and back-end development servers, in the root directory run `npm run develop`.
 
-The deployed application can be viewed [here]().
+The deployed application can be viewed [here](https://warm-coast-29465.herokuapp.com/).
 
 ![Screenshot](./assets/screenshot.jpg)
 
