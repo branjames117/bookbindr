@@ -85,11 +85,12 @@ const resolvers = {
       }
     },
 
-    deleteBook: async (parent, args, context) => {
+    removeBook: async (parent, { bookId }, context) => {
+      console.log('attempting to remove book with ID: ', bookId);
       try {
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
-          { $pull: { savedBooks: { bookId: args.bookId } } },
+          { $pull: { savedBooks: { bookId } } },
           { new: true }
         );
 
